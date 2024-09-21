@@ -5,6 +5,8 @@ import { Link } from "react-router-dom"
 import { useTheme } from "next-themes"
 import { Button } from "./ui/button"
 import { ScrollArea } from "./ui/scroll-area"
+import { useToast } from '@/hooks/use-toast'
+import { Toast, ToastAction } from './ui/toast'
 import { UserCircle, FileText, Moon, Sun, LogOut } from "lucide-react"
 import { useAuth } from '../hooks/useAuth'
 import { signOut } from 'firebase/auth'
@@ -16,8 +18,10 @@ export function Sidebar() {
   const navigate = useNavigate()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { theme, setTheme } = useTheme()
+  const {toast} = useToast()
 
   const toggleTheme = () => {
+
     setTheme(theme === "dark" ? "light" : "dark")
   }
 
@@ -25,7 +29,12 @@ export function Sidebar() {
     try {
       await signOut(auth)
       navigate('/login')
+      toast({
+        title: 'Logout Successfully',
+        description: 'See yaa ~',
+      })
     } catch (error) {
+
       console.error('Logout failed', error)
     }
   };

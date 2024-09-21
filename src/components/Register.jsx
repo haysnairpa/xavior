@@ -76,6 +76,7 @@ export const Register = () => {
             toast({
               title: 'User signed out successfully',
               description: 'You are now signed out from your account',
+              variant: 'success',
               action: <ToastAction altText="Sign out Successfully">Okay</ToastAction>
             })
         } catch (error) {

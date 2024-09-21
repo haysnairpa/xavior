@@ -27,8 +27,9 @@ export const Login = () => {
       toast({
         title: 'Login succcessfully',
         description: 'You are now logged in to your account',
-        action: <ToastAction altText="Login Successfully">Okay</ToastAction>
+        variant: 'success',
       })
+
 			navigate('/');
 		} catch (error) {
 			console.log(error);
