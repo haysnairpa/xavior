@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -8,21 +8,29 @@ import {Toast, ToastAction} from '../components/ui/toast'
 import { FileText, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes"
 import {doc, getDoc, setDoc} from 'firebase/firestore'
-import {db, auth} from '../config/firebase'
-import {onAuthStateChanged} from 'firebase/auth'
-
+import { db, auth } from '../config/firebase'
+import { onAuthStateChanged, updateProfile, getAuth } from 'firebase/auth'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { useAuth } from '../hooks/useAuth';
 
 export const Profile = () => {
-  const { theme } = useTheme()
-  const {toast} = useToast()
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth();
+  const { theme } = useTheme();
+
+  const {toast} = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const [profilePictureURL, setProfilePictureURL] = useState(user?.photoURL || '');
 
   const [personalInfo, setPersonalInfo] = useState({
+
     fullname: '',
     username: '',
-    email: 'johndoe@gmail.com',
+    email: 'youremail@gmail.com',
     profession: ''
   });
+
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -47,6 +55,7 @@ export const Profile = () => {
           email: userData.email || '',
           profession: userData.profession || ''
         }))
+        setProfilePictureURL(userData.profilePictureURL || '')
       }
     } catch (error) {
       console.log('Error fetching user data: ' + error)
@@ -67,7 +76,8 @@ export const Profile = () => {
     if (user) {
       try {
         await setDoc(doc (db, "Users", user.uid), {
-          ...personalInfo
+          ...personalInfo,
+          profilePictureURL: profilePictureURL
         }, {merge: true})
         toast({
           title: 'Data updated successfully',
@@ -86,8 +96,60 @@ export const Profile = () => {
     console.log('Data Updated:', personalInfo);
   };
 
-  const handlePictureChange = () => {
-    console.log('Memicu dialog unggah file');
+  const handlePictureChange = async (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      try {
+        setLoading(true);
+        await uploadProfilePicture(file);
+      } catch (error) {
+        console.error("Error updating profile picture: ", error);
+        toast({
+          title: 'Gagal memperbarui foto profil',
+          description: 'Terjadi kesalahan saat memperbarui foto profil. Silakan coba lagi.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      toast({
+        title: 'Format file tidak didukung',
+        description: 'Harap pilih file gambar (JPG, PNG, dll).',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const uploadProfilePicture = async (file) => {
+    const storage = getStorage();
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) throw new Error("No user logged in");
+
+    const storageRef = ref(storage, `profilePictures/${user.uid}`);
+
+    // Upload file
+    await uploadBytes(storageRef, file);
+
+    // Get download URL
+    const downloadURL = await getDownloadURL(storageRef);
+
+    // Update user profile
+    await updateProfile(user, { photoURL: downloadURL });
+
+    // Update Firestore
+    await setDoc(doc(db, "Users", user.uid), { profilePictureURL: downloadURL }, { merge: true });
+
+    // Update local state
+    setProfilePictureURL(downloadURL);
+
+    toast({
+      title: 'Profile picture updated successfully',
+      description: 'Your profile picture has been successfully updated',
+      variant: 'success'
+    })
   };
 
 
@@ -98,20 +160,30 @@ export const Profile = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen  dark:bg-[#252525] text-white p-4 lg:p-8 gap-4 lg:gap-8">
-
+    <div className="flex flex-col lg:flex-row h-screen dark:bg-[#252525] text-white p-4 lg:p-8 gap-4 lg:gap-8 overflow-auto">
       <Card className="w-full lg:w-64 bg-gray-100 dark:bg-[#1b1b23] border-none">
         <CardContent className="flex flex-col items-center p-6">
-          <img src="/path-to-profile-image.jpg" alt="Profile" className="w-24 h-24 rounded-full mb-4" />
+          <img src={profilePictureURL} alt="Profile" className="w-24 h-24 rounded-full mb-4" />
           <h2 className="text-lg font-semibold mb-1">{personalInfo.fullname}</h2>
           <p className="text-sm text-gray-400 mb-4">{personalInfo.profession}</p>
-          <Button onClick={handlePictureChange} className="w-full  hover:bg-[#444] text-white">
+          <input 
+            type="file"
+            accept='image/*' 
+            onChange={handlePictureChange}
+            style={{display: 'none'}}
+            ref={fileInputRef}
+          />
+          <Button 
+            onClick={() => fileInputRef.current.click()}
+            className="w-full hover:bg-[#444] text-white"
+          >
             Change Picture
           </Button>
+          {loading && <Loader2 className="h-10 w-10 animate-spin mt-2" />}
         </CardContent>
       </Card>
 
-      <Card className="flex-1 bg-gray-100 dark:bg-[#1b1b23] border-none">
+      <Card className="flex-1 bg-gray-100 dark:bg-[#1b1b23] border-none overflow-auto">
         <CardContent className="p-4 lg:p-6">
           <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -136,7 +208,7 @@ export const Profile = () => {
                      className="dark:bg-transparent  dark:border-gray-600 " />
             </div>
           </div>
-          <Button onClick={handleUpdate} className="hover:bg-[#444] sm:w-full lg:w-auto text-white">Update</Button>
+          <Button onClick={handleUpdate} className="hover:bg-[#444] w-full sm:w-auto text-white mb-4">Update</Button>
 
           <h2 className="text-xl font-semibold mt-8 mb-4">Upload History</h2>
           <ScrollArea className="h-[200px]">

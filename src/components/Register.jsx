@@ -89,12 +89,12 @@ export const Register = () => {
     }
 
     return (
-      <div className="min-h-screen min-w-full flex items-center justify-center bg-[#252525]">
-        <div className="w-full flex flex-col items-center justify-center">
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#252525] p-4">
+        <div className="w-full max-w-md">
           <Card className="bg-[#1B1B23] text-white shadow-lg">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-white text-center">Welcome to Essaier!</CardTitle>
-              <CardDescription className="text-sm text-gray-400 text-center">
+              <CardTitle className="text-xl sm:text-2xl font-bold text-white text-center">Welcome to Essaier!</CardTitle>
+              <CardDescription className="text-xs sm:text-sm text-gray-400 text-center">
                 Ready to prepare for your next job? Fill in the details below, and let the journey begin!
               </CardDescription>
             </CardHeader>
@@ -110,20 +110,13 @@ export const Register = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-white">Password</Label>
-                  <Input id="password" type="password" placeholder="Create your password" onChange={(e) => setPassword(e.target.value)} className="bg-transparent text-white border-[#333]" />
+                  <Input id="password" type="password" placeholder="Create a strong password" onChange={(e) => setPassword(e.target.value)} className="bg-transparent text-white border-[#333]" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
                   <Input id="confirm-password" type="password" placeholder="Confirm your password" onChange={(e) => setPassword(e.target.value)} className="bg-transparent text-white border-[#333]" />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="remember" className="border-gray-600" />
-                    <label htmlFor="remember" className="text-sm text-gray-400">Remember me</label>
-                  </div>
-                  <a href="#" className="text-sm text-gray-400 hover:text-gray-300">Forgot your password?</a>
-                </div>
-                <Button type="submit" className="w-full bg-[#0066ff] hover:bg-[#0052cc]">
+                <Button type="submit" className="w-full bg-[#0066ff] hover:bg-[#0052cc] text-white">
                   Sign Up
                 </Button>
               </form>
@@ -135,7 +128,7 @@ export const Register = () => {
             </CardContent>
           </Card>
           <div className="mt-4 text-center">
-            <p className="text-sm text-gray-400 text-center">
+            <p className="text-xs sm:text-sm text-gray-400 text-center">
               Already have an account? <a href="/login" className="text-white hover:text-gray-300">Login here.</a>
             </p>
           </div>

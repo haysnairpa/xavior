@@ -37,11 +37,11 @@ export const Review = () => {
   }, [])
 
   return (
-    <div className="flex-1 overflow-auto p-8 bg-white dark:bg-transparent text-gray-900 dark:text-white">
-      <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">
-        Welcome to AI Essay Reviewer
+    <div className="flex-1 overflow-auto p-4 lg:p-8 bg-white dark:bg-transparent text-gray-900 dark:text-white">
+      <h1 className="text-2xl lg:text-4xl font-bold mb-4 lg:mb-8 text-gray-900 dark:text-white">
+        Welcome to Xavior, the AI Essay Reviewer
       </h1>
-      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-4 lg:gap-8 grid-cols-1 lg:grid-cols-2">
         <Card className="w-full bg-gray-100 dark:bg-slate-950" ref={uploadCardRef}>
           <CardHeader>
             <CardTitle className="text-gray-900 dark:text-white">Upload Your Essay</CardTitle>
@@ -62,7 +62,7 @@ export const Review = () => {
               />
               <Button
                 type="submit"
-                className="bg-black hover:bg-gray-700 text-white dark:bg-white dark:hover:bg-gray-400"
+                className="w-full bg-black hover:bg-gray-700 text-white dark:bg-white dark:hover:bg-gray-400 dark:text-black"
               >
                 Submit for Review
               </Button>

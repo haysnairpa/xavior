@@ -10,7 +10,7 @@ import { auth, googleProvider } from '../config/firebase'
 import { createUserWithEmailAndPassword, signInWithPopup, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import GoogleIcon from '../assets/icons8-google-48.png';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export const Login = () => {
@@ -44,19 +44,21 @@ export const Login = () => {
 	const signInWithGoogle = async () => {
 		try {
 			await signInWithPopup(auth, googleProvider)
-			alert("User signed in with Google successfully")
-      toast({
-        title: 'Login with Google Successfully',
-        description: 'You are now logged in to your account',
-        action: <ToastAction altText="Login Successfully">Okay</ToastAction>
-      })
-		} catch (error) {
-			console.log(error)
-      toast({
-        title: 'Login Failed',
-        description: 'Please check your goggle account.',
-        variant: 'destructive'
-      })
+			
+			toast({
+				title: 'Login with Google Successfully',
+				description: 'You are now logged in to your account',
+				variant: 'success'
+			})
+
+			navigate('/')
+				} catch (error) {
+					console.log(error)
+			toast({
+				title: 'Login Failed',
+				description: 'Please check your goggle account.',
+				variant: 'destructive'
+			})
 		}
 	}
 
@@ -74,77 +76,76 @@ export const Login = () => {
 	}
 
 	return (
-    <div className="min-h-screen min-w-full flex items-center justify-center bg-[#252525]">
-
-		<div className="container mx-auto max-w-lg">
-			<Card className="bg-[#1B1B23] p-4 text-white shadow-lg">
-				<CardHeader>
-					<CardTitle className="text-2xl font-bold mb-2 text-center">Welcome Back, Essaier!</CardTitle>
-					<CardDescription className="text-sm text-gray-400 text-center">
-						We are excited to have you back. Log in now and access your account.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="space-y-4">
-						<div className="space-y-2">
-							<Label htmlFor="email">Username or Email</Label>
-							<Input
-								id="email"
-								placeholder="youremail@gmail.com"
-								onChange={(e) => setEmail(e.target.value)}
-								className="bg-transparent text-white border-[#333] focus:border-[#0066ff]"
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="password">Password</Label>
-							<Input
-								id="password"
-								type="password"
-								placeholder="Enter your password"
-								onChange={(e) => setPassword(e.target.value)}
-								className="bg-transparent text-white border-[#333] focus:border-[#0066ff]"
-							/>
-						</div>
-						<div className="flex items-center justify-between">
-							<div className="flex items-center space-x-2">
-								<Checkbox id="remember" />
-								<label htmlFor="remember" className="text-sm text-gray-400">Remember me</label>
-							</div>
-							<a href="#" className="text-sm text-gray-400 hover:text-gray-300">Forgot your password?</a>
-						</div>
-						{!user ? (
-							<>
-								<Button className="w-full bg-[#0066ff] hover:bg-[#0052cc]" onClick={signIn}>
-									Log In
-								</Button>
-								<div className="text-center text-gray-400 my-3">or</div>
-								<Button
-									variant="outline"
-									className="w-full  border-[#333] hover:bg-[rgba(255,255,255,0.05)] text-white"
-									onClick={signInWithGoogle}
-								>
-									<img src={GoogleIcon} alt="Google" className="w-6 h-6 mr-2" />
-									Sign in with Google
-								</Button>
-							</>
-						) : (
-							<Button
-								variant="outline"
-								className="w-full border-[#333] hover:bg-[rgba(255,255,255,0.05)] text-white mt-3"
-								onClick={logOut}
-							>
-								<LogoutRoundedIcon className="mr-2" /> Log Out
-							</Button>
-						)}
-					</div>
-				</CardContent>
-			</Card>
-			<div className="mt-4 text-center">
-				<p className="text-sm text-gray-400">
-					Don't have an account yet? <a href="/register" className="text-white hover:text-gray-300">Register here.</a>
-				</p>
-			</div>
-		</div>
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#252525] p-4">
+      <div className="w-full max-w-md">
+        <Card className="bg-[#1B1B23] p-4 text-white shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl sm:text-2xl font-bold mb-2 text-center">Welcome Back, Essaier!</CardTitle>
+            <CardDescription className="text-xs sm:text-sm text-gray-400 text-center">
+              We are excited to have you back. Log in now and access your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Username or Email</Label>
+                <Input
+                  id="email"
+                  placeholder="youremail@gmail.com"
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-transparent text-white border-[#333] focus:border-[#0066ff]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-transparent text-white border-[#333] focus:border-[#0066ff]"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="remember" />
+                  <label htmlFor="remember" className="text-xs sm:text-sm text-gray-400">Remember me</label>
+                </div>
+                <a href="#" className="text-xs sm:text-sm text-gray-400 hover:text-gray-300">Forgot your password?</a>
+              </div>
+              {!user ? (
+                <>
+                  <Button className="w-full bg-[#0066ff] hover:bg-[#0052cc]" onClick={signIn}>
+                    Log In
+                  </Button>
+                  <div className="text-center text-gray-400 my-3">or</div>
+                  <Button
+                    variant="outline"
+                    className="w-full border-[#333] hover:bg-[rgba(255,255,255,0.05)] text-white"
+                    onClick={signInWithGoogle}
+                  >
+                    <img src={GoogleIcon} alt="Google" className="w-6 h-6 mr-2" />
+                    Sign in with Google
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full border-[#333] hover:bg-[rgba(255,255,255,0.05)] text-white mt-3"
+                  onClick={logOut}
+                >
+                  <LogoutRoundedIcon className="mr-2" /> Log Out
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <div className="mt-4 text-center">
+          <p className="text-xs sm:text-sm text-gray-400">
+            Don't have an account yet? <a href="/register" className="text-white hover:text-gray-300">Register here</a>
+          </p>
+        </div>
+      </div>
     </div>
 	);
 }
