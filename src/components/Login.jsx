@@ -8,15 +8,15 @@ import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from './ui/toast'
 import { auth, googleProvider } from '../config/firebase'
 import { createUserWithEmailAndPassword, signInWithPopup, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { db } from '../config/firebase'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import GoogleIcon from '../assets/icons8-google-48.png';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export const Login = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const { user } = useAuth();
 	const navigate = useNavigate();
 
 	const {toast} = useToast()
@@ -35,15 +35,23 @@ export const Login = () => {
 			console.log(error);
       toast({
         title: 'Login Failed',
-        description: 'Please check your email and password',
+        description: error.message,
         variant: 'destructive'
+
       })
 		}
 	}
 
 	const signInWithGoogle = async () => {
 		try {
-			await signInWithPopup(auth, googleProvider)
+			const result = await signInWithPopup(auth, googleProvider)
+			const user = result.user
+
+			await setDoc(doc(db, "Users", user.uid), {
+				email: user.email,
+				username: user.displayName || '',
+				profilePicture: user.photoURL || ''
+			}, {merge: true})
 			
 			toast({
 				title: 'Login with Google Successfully',
@@ -52,27 +60,13 @@ export const Login = () => {
 			})
 
 			navigate('/')
-				} catch (error) {
-					console.log(error)
+			} catch (error) {
 			toast({
 				title: 'Login Failed',
-				description: 'Please check your goggle account.',
+				description: error.message,
 				variant: 'destructive'
 			})
 		}
-	}
-
-	const logOut = async () => {
-		try {
-			await signOut(auth)
-      toast({
-        title: 'Logout successfully',
-        description: 'See yaa ~',
-        variant: 'default'
-      })
-		} catch (error) {
-			console.log(error)
-		} 
 	}
 
 	return (
@@ -113,30 +107,18 @@ export const Login = () => {
                 </div>
                 <a href="#" className="text-xs sm:text-sm text-gray-400 hover:text-gray-300">Forgot your password?</a>
               </div>
-              {!user ? (
-                <>
-                  <Button className="w-full bg-[#0066ff] hover:bg-[#0052cc]" onClick={signIn}>
-                    Log In
-                  </Button>
-                  <div className="text-center text-gray-400 my-3">or</div>
-                  <Button
-                    variant="outline"
-                    className="w-full border-[#333] hover:bg-[rgba(255,255,255,0.05)] text-white"
-                    onClick={signInWithGoogle}
-                  >
-                    <img src={GoogleIcon} alt="Google" className="w-6 h-6 mr-2" />
-                    Sign in with Google
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full border-[#333] hover:bg-[rgba(255,255,255,0.05)] text-white mt-3"
-                  onClick={logOut}
-                >
-                  <LogoutRoundedIcon className="mr-2" /> Log Out
-                </Button>
-              )}
+              <Button className="w-full bg-[#0066ff] hover:bg-[#0052cc]" onClick={signIn}>
+                Log In
+              </Button>
+              <div className="text-center text-gray-400 my-3">or</div>
+              <Button
+                variant="outline"
+                className="w-full border-[#333] hover:bg-[rgba(255,255,255,0.05)] text-white"
+                onClick={signInWithGoogle}
+              >
+                <img src={GoogleIcon} alt="Google" className="w-6 h-6 mr-2" />
+                Sign in with Google
+              </Button>
             </div>
           </CardContent>
         </Card>

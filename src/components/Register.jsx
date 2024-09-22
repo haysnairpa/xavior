@@ -59,7 +59,7 @@ export const Register = () => {
             toast({
               title: 'User signed in with Google successfully',
               description: 'You are now signed in to your Google account',
-              action: <ToastAction altText="Sign in with Google Successfully">Okay</ToastAction>
+              variant: 'success'
             })
         } catch (error) {
             toast({
@@ -123,9 +123,10 @@ export const Register = () => {
               <div className="text-center text-gray-400 my-2">or</div>
               <Button variant="outline" className="w-full border-[#333] text-white hover:bg-white/5" onClick={signInWithGoogle}>
                 <img src={GoogleIcon} alt="Google" className="w-6 h-6 mr-2" />
-                Sign in with Google
+                Sign Up with Google
               </Button>
             </CardContent>
+
           </Card>
           <div className="mt-4 text-center">
             <p className="text-xs sm:text-sm text-gray-400 text-center">
