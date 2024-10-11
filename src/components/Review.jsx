@@ -4,15 +4,47 @@ import { Input } from "./ui/input"
 import { Textarea } from "./ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { useTheme } from "next-themes"
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { onAuthStateChanged, getAuth } from 'firebase/auth'
+import {doc, getDoc, setDoc} from 'firebase/firestore'
+import { useToast } from '@/hooks/use-toast';
+import { db, auth } from '../config/firebase'
+
 
 export const Review = () => {
+  const {toast} = useToast();
   const { theme } = useTheme()
   const [reviewResults, setReviewResults] = useState(null)
+  const [fileURL, setfileURL] = useState(null);
   const uploadCardRef = useRef(null)
   const resultCardRef = useRef(null)
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    const fileInput = e.target.querySelector('input[type="file"]');
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (file && file.type.startsWith('application/*')) {
+      try {
+        setLoading(true);
+        await uploadFile(file);
+      } catch (error) {
+        console.error("Error upload file ", error);
+        toast({
+          title: 'Gagal upload',
+          description: 'Terjadi kesalahan. Silakan coba lagi.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      toast({
+        title: 'Format file tidak didukung',
+        description: 'Harap pilih file gambar (JPG, PNG, dll).',
+        variant: 'destructive',
+      });
+    }
     // Simulasi hasil review AI
     setReviewResults({
       grammarScore: 95,
@@ -20,6 +52,34 @@ export const Review = () => {
       contentScore: 88
     })
   }
+  
+  const uploadFile = async (file) => {
+    const storage = getStorage();//udah
+    const auth = getAuth();//udah
+    const user = auth.currentUser;
+
+    if (!user) throw new Error("No user logged in");
+
+    const storageRef = ref(storage, `fileUploaded/${user.uid}`);
+
+    // Upload file
+    await uploadBytes(storageRef, file);
+
+    // Get download URL
+    const downloadURL = await getDownloadURL(storageRef);
+
+    // Update Firestore
+    await setDoc(doc(db, "Users", user.uid), { fileURL: downloadURL }, { merge: true });
+
+    // Update local state
+    setfileURL(downloadURL);
+
+    toast({
+      title: 'File uploaded successfully',
+      description: 'Your file has been successfully uploaded',
+      variant: 'success'
+    })
+  };
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
