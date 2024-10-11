@@ -10,28 +10,109 @@ import {
     CardTitle,
 } from "./ui/card";
 import { useTheme } from "next-themes";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { onAuthStateChanged, getAuth } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { db, auth } from "../config/firebase";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Review = () => {
+    const { toast } = useToast();
     const { theme } = useTheme();
+    const { user } = useAuth();
+
     const [reviewResults, setReviewResults] = useState(null);
+    const [fileURL, setfileURL] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [recentUser, setRecentUser] = useState(null);
+
     const uploadCardRef = useRef(null);
     const resultCardRef = useRef(null);
 
-    const handleChange = (e) => {
-        console.log(e.target.files[0]);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        const fileInput = e.target.querySelector('input[type="file"]');
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        console.log(file);
+        if (file?.type.startsWith("application/")) {
+            try {
+                setLoading(true);
+                await uploadFile(file);
+                // Simulasi hasil review AI
+                setReviewResults({
+                    grammarScore: 95,
+                    structureScore: 90,
+                    contentScore: 88,
+                });
+            } catch (error) {
+                console.error("Error upload file ", error);
+                toast({
+                    title: "Gagal upload",
+                    description: "Terjadi kesalahan. Silakan coba lagi.",
+                    variant: "destructive",
+                });
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            toast({
+                title: "Format file tidak didukung",
+                description: "Harap pilih file gambar (JPG, PNG, dll).",
+                variant: "destructive",
+            });
+        }
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Simulasi hasil review AI
-        setReviewResults({
-            grammarScore: 95,
-            structureScore: 90,
-            contentScore: 88,
+    const uploadFile = async (file) => {
+        const storage = getStorage();
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (!user) throw new Error("No user logged in");
+
+        const storageRef = ref(storage, `fileUploaded/${user.uid}`);
+
+        // Upload file
+        await uploadBytes(storageRef, file);
+
+        // Get download URL
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // Update Firestore
+        await setDoc(
+            doc(db, "Users", user.uid),
+            { fileURL: downloadURL },
+            { merge: true }
+        );
+
+        // Update local state
+        setfileURL(downloadURL);
+
+        toast({
+            title: "File uploaded successfully",
+            description: "Your file has been successfully uploaded",
+            variant: "success",
         });
     };
 
+    const fetchuserData = async (uid) => {
+        try {
+            const userDoc = await getDoc(doc(db, "Users", uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                setRecentUser(userData);
+            }
+        } catch (error) {
+            console.log("Error fetching user data: " + error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
+        fetchuserData(user.uid);
         const resizeObserver = new ResizeObserver(() => {
             if (uploadCardRef.current && resultCardRef.current) {
                 const uploadHeight = uploadCardRef.current.offsetHeight;
@@ -49,7 +130,8 @@ export const Review = () => {
     return (
         <div className="flex-1 overflow-auto p-4 lg:p-8 bg-white dark:bg-transparent text-gray-900 dark:text-white">
             <h1 className="text-2xl lg:text-4xl font-bold mb-4 lg:mb-8 text-gray-900 dark:text-white">
-                Welcome to Xavior, the AI Essay Reviewer
+                Hello {recentUser?.username.split(" ")[0]}, Welcome to Xavior
+                The AI Essay Reviewer
             </h1>
             <div className="grid gap-4 lg:gap-8 grid-cols-1 lg:grid-cols-2">
                 <Card
@@ -70,8 +152,6 @@ export const Review = () => {
                                 id="essay-upload"
                                 type="file"
                                 className="bg-white dark:bg-transparent text-gray-900 dark:text-white"
-                                onChange={handleChange}
-                                accept="application/*"
                             />
                             <Textarea
                                 placeholder="Or paste your essay here..."
