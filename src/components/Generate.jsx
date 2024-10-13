@@ -1,169 +1,239 @@
-import { useState, useEffect, useRef } from "react"
-import { Button } from "./ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
-import { useTheme } from "next-themes"
-import { StudyPlanForm } from "./form/studyPlanForm"
-import { MotivationalLetterForm } from "./form/motivationLetterForm"
-import { PersonalStatementForm } from "./form/personalStatementForm"
+import React, { useState } from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Label } from "./ui/label";
+import { ScrollArea } from "./ui/scroll-area";
 
 export const Generate = () => {
-  const { theme } = useTheme()
-  const [essay, setEssay] = useState("Motivational Letter")
-  const [result, setResult] = useState(null)
-  const [studyPlan, setStudyPlan] = useState({
-    studyProgram: "",
-    institution: "",
-    motivation: "",
-    background: "",
-    courses: [
-      {
-        course: "",
-        reason: ""
-      }
-    ],
-    plans: [
-      {
-        plan: "",
-        reason: ""
-      }
-    ]
-  })
-  const [motivationLetter, setMotivationLetter] = useState({
-    studyProgram: "",
-    institution: "",
-    background: "",
-    motivations: [
-      {
-        motivation: "",
-        plan: "",
-      }
-    ],
-    advantages: "",
-    
-  })
-  const [personalStatement, setPersonalStatement] = useState({
-    studyProgram: "",
-    institution: "",
-    background: "",
-    advantages: "",
-    experiences: [
-      {
-        experience: "",
-        detail: ""
-      }
-    ],
-    achievements: [
-      {
-        achievement: "",
-        detail: ""
-      }
-    ],
-  })
+  const [essayType, setEssayType] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [generatedEssay, setGeneratedEssay] = useState("");
 
-  const uploadCardRef = useRef(null)
-  const resultCardRef = useRef(null)
+  const handleEssayTypeSelect = (type) => {
+    setEssayType(type);
+    setFormData({});
+  };
 
-  const handleSubmit = (e, form) => {
-    if (e) e.preventDefault()
-    // Simulasi hasil review AI
-    console.log(form);
-    // Here you would typically send the studyPlan to your backend or AI service
-    // For now, let's just set some dummy review results
-  }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
 
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      if (uploadCardRef.current && resultCardRef.current) {
-        const uploadHeight = uploadCardRef.current.offsetHeight
-        resultCardRef.current.style.height = `${uploadHeight}px`
-      }
-    })
+  const handleArrayInputChange = (index, field, subfield, value) => {
+    setFormData(prevData => {
+      const newArray = [...(prevData[field] || [])];
+      newArray[index] = { ...newArray[index], [subfield]: value };
+      return { ...prevData, [field]: newArray };
+    });
+  };
 
-    if (uploadCardRef.current) {
-      resizeObserver.observe(uploadCardRef.current)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Submitting:", essayType, formData);
+    // Simulasi generate essay (ganti dengan panggilan API sebenarnya)
+    setGeneratedEssay("This is a generated essay based on your inputs. Replace this with the actual AI-generated content.");
+  };
+
+  const renderForm = () => {
+    switch (essayType) {
+      case "Study Plan":
+        return (
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="studyProgram">Study Program</Label>
+                <Input id="studyProgram" name="studyProgram" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="institution">Institution</Label>
+                <Input id="institution" name="institution" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="motivation">Motivation</Label>
+                <Textarea id="motivation" name="motivation" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="background">Background</Label>
+                <Textarea id="background" name="background" onChange={handleInputChange} required />
+              </div>
+              {['courses', 'plans'].map((field, fieldIndex) => (
+                <div key={field}>
+                  <Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
+                  {[0, 1].map((index) => (
+                    <div key={`${field}-${index}`} className="mt-2">
+                      <Input
+                        placeholder={`${field} ${index + 1}`}
+                        onChange={(e) => handleArrayInputChange(index, field, field, e.target.value)}
+                        className="mb-2"
+                      />
+                      <Textarea
+                        placeholder={`Reason for ${field} ${index + 1}`}
+                        onChange={(e) => handleArrayInputChange(index, field, 'reason', e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <Button type="submit">Generate Study Plan</Button>
+            </div>
+          </form>
+        );
+      case "Motivation Letter":
+        return (
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="studyProgram">Study Program</Label>
+                <Input id="studyProgram" name="studyProgram" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="institution">Institution</Label>
+                <Input id="institution" name="institution" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="background">Background</Label>
+                <Textarea id="background" name="background" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label>Motivations</Label>
+                {[0, 1].map((index) => (
+                  <div key={`motivation-${index}`} className="mt-2">
+                    <Input
+                      placeholder={`Motivation ${index + 1}`}
+                      onChange={(e) => handleArrayInputChange(index, 'motivations', 'motivation', e.target.value)}
+                      className="mb-2"
+                    />
+                    <Textarea
+                      placeholder={`Plan for motivation ${index + 1}`}
+                      onChange={(e) => handleArrayInputChange(index, 'motivations', 'plan', e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <Label htmlFor="advantages">Advantages</Label>
+                <Textarea id="advantages" name="advantages" onChange={handleInputChange} required />
+              </div>
+              <Button type="submit">Generate Motivation Letter</Button>
+            </div>
+          </form>
+        );
+      case "Personal Statement":
+        return (
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="studyProgram">Study Program</Label>
+                <Input id="studyProgram" name="studyProgram" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="institution">Institution</Label>
+                <Input id="institution" name="institution" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="background">Background</Label>
+                <Textarea id="background" name="background" onChange={handleInputChange} required />
+              </div>
+              <div>
+                <Label htmlFor="advantages">Advantages</Label>
+                <Textarea id="advantages" name="advantages" onChange={handleInputChange} required />
+              </div>
+              {['experiences', 'achievements'].map((field, fieldIndex) => (
+                <div key={field}>
+                  <Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
+                  {[0, 1].map((index) => (
+                    <div key={`${field}-${index}`} className="mt-2">
+                      <Input
+                        placeholder={`${field.slice(0, -1)} ${index + 1}`}
+                        onChange={(e) => handleArrayInputChange(index, field, field.slice(0, -1), e.target.value)}
+                        className="mb-2"
+                      />
+                      <Textarea
+                        placeholder={`Detail for ${field.slice(0, -1)} ${index + 1}`}
+                        onChange={(e) => handleArrayInputChange(index, field, 'detail', e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <Button type="submit">Generate Personal Statement</Button>
+            </div>
+          </form>
+        );
+      default:
+        return null;
     }
-
-    return () => resizeObserver.disconnect()
-  }, [])
+  };
 
   return (
     <div className="flex-1 overflow-auto p-4 lg:p-8 bg-white dark:bg-transparent text-gray-900 dark:text-white">
       <h1 className="text-2xl lg:text-4xl font-bold mb-4 lg:mb-8 text-gray-900 dark:text-white">
         Generate Essay with Xavior
       </h1>
+      <p className="mb-4 text-gray-600 dark:text-gray-400">
+        Choose the type of essay you want to generate. Our AI will help you create a well-structured essay based on your inputs.
+      </p>
       <div className="grid gap-4 lg:gap-8 grid-cols-1 lg:grid-cols-2">
-        <Card className="w-full bg-gray-100 dark:bg-slate-950" ref={uploadCardRef}>
+        <div className="space-y-4">
+          <Card className="w-full bg-gray-100 dark:bg-slate-950">
+            <CardHeader>
+              <CardTitle className="text-gray-900 dark:text-white">Choose Essay Type</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-400">
+                Select the type of essay you want to generate
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {["Study Plan", "Motivation Letter", "Personal Statement"].map((type) => (
+                  <Button 
+                    key={type}
+                    type="button"
+                    className="w-full "
+                    onClick={() => handleEssayTypeSelect(type)}
+                  >{type}</Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          
+          {essayType && (
+            <Card className="w-full bg-gray-100 dark:bg-slate-950">
+              <CardHeader>
+                <CardTitle className="text-gray-900 dark:text-white">{essayType} Form</CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Fill in the details for your {essayType}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[60vh]">
+                  {renderForm()}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+        
+        <Card className="w-full bg-gray-100 dark:bg-slate-950">
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-white">Generate Essay</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-white">Generated Essay</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
-              Submit your essay for AI-powered review
+              Your AI-generated essay will appear here
             </CardDescription>
-            <Button 
-              type="button"
-              variant="outline" 
-              className="w-full hover:text-black dark:bg-white dark:hover:bg-gray-400 dark:text-black"
-              onClick={() => setEssay("Motivational Letter")}
-              >Motivation Letter</Button>
-            <Button 
-              type="button"
-              variant="outline" 
-              className="w-full hover:text-black dark:bg-white dark:hover:bg-gray-400 dark:text-black"
-              onClick={() => setEssay("Personal Statement")}
-              >Personal Statement</Button>
-            <Button 
-              type="button"
-              variant="outline" 
-              className="w-full hover:text-black dark:bg-white dark:hover:bg-gray-400 dark:text-black"
-              onClick={() => setEssay("Study Plan")}
-              >Study Plan</Button>
           </CardHeader>
           <CardContent>
-            {essay === "Motivational Letter" ? (
-              <div>
-                <h4 className="text-xl lg:text-md font-bold mb-4 lg:mb-8 text-gray-900 dark:text-white">
-                  Motivational Letter Essay
-                </h4>
-                <MotivationalLetterForm
-                  handleSubmit={() => handleSubmit(form = motivationLetter)}
-                  parameter={motivationLetter}
-                  setParameter={setMotivationLetter}
-                />
+            <ScrollArea className="">
+              <div className="whitespace-pre-wrap">
+                {generatedEssay || "Your generated essay will appear here after submission."}
               </div>
-            ) : essay === "Study Plan" ? (
-              <div>
-                <h4 className="text-xl lg:text-md font-bold mb-4 lg:mb-8 text-gray-900 dark:text-white">
-                  Study Plan Essay
-                </h4>
-                <StudyPlanForm
-                  handleSubmit={() => handleSubmit(form = studyPlan)}
-                  parameter={studyPlan}
-                  setParameter={setStudyPlan}
-                />
-              </div>
-            ) : (
-              <div>
-                <h4 className="text-xl lg:text-md font-bold mb-4 lg:mb-8 text-gray-900 dark:text-white">
-                  Personal Statement Essay
-                </h4>
-                <PersonalStatementForm
-                  handleSubmit={() => handleSubmit(form = personalStatement)}
-                  parameter={personalStatement}
-                  setParameter={setPersonalStatement}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className={`w-full flex flex-col dark:bg-[#1b1b23] ${result ? '' : 'justify-center items-center text-center'}`} ref={resultCardRef}>
-          <CardHeader>
-            <CardTitle>AI Review Results</CardTitle>
-            <CardDescription>Get instant feedback on your essay</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Submit your essay to see AI-generated review results here.</p>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
-}
+  );
+};
