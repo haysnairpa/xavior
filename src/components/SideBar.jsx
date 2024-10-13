@@ -64,6 +64,12 @@ export function Sidebar({ isOpen, setIsOpen }) {
                 {isOpen && "Review"}
               </Button>
             </Link>
+            <Link to="/generate" className="w-full block" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start dark:hover:bg-gray-700">
+                <FileText className="mr-2 h-4 w-4" />
+                {isOpen && "Generate"}
+              </Button>
+            </Link>
           </nav>
         </ScrollArea>
         <div className="p-4 space-y-2 w-full">
