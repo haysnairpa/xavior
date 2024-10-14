@@ -16,6 +16,11 @@ import { doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from "fireba
 import { useToast } from "@/hooks/use-toast";
 import { db, storage, auth } from "../config/firebase";
 import { useAuth } from "../hooks/useAuth";
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Loader2 } from "lucide-react";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 export const Review = () => {
   const { toast } = useToast();
@@ -201,6 +206,39 @@ export const Review = () => {
     return () => resizeObserver.disconnect();
   }, []);
 
+  const chartData = {
+    labels: ['Grammar', 'Structure', 'Content'],
+    datasets: [
+      {
+        data: [95, 90, 88],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: theme === 'dark' ? 'white' : 'black',
+        },
+      },
+    },
+  };
+
   return (
     <div className="flex-1 overflow-auto p-4 lg:p-8 bg-white dark:bg-transparent text-gray-900 dark:text-white">
       <h1 className="text-2xl lg:text-4xl font-bold mb-4 lg:mb-8 text-gray-900 dark:text-white">
@@ -257,20 +295,15 @@ export const Review = () => {
               Get instant feedback on your essay
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {reviewResults ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold">Grammar Score:</h3>
-                  <p>{reviewResults.grammarScore}/100</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Structure Score:</h3>
-                  <p>{reviewResults.structureScore}/100</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Content Score:</h3>
-                  <p>{reviewResults.contentScore}/100</p>
+          <CardContent className="flex flex-col items-center">
+            {loading ? (
+              <div className="flex items-center justify-center h-[300px]">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : reviewResults ? (
+              <div className="space-y-4 w-full">
+                <div style={{ height: '300px' }}>
+                  <Pie data={chartData} options={chartOptions} />
                 </div>
                 <Button
                   variant="outline"
