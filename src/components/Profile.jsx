@@ -7,13 +7,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Toast, ToastAction } from "../components/ui/toast";
 import { FileText, Loader2, UserIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { doc, getDoc, setDoc, serverTimestamp , collection, query, orderBy, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp , collection, query, orderBy, getDocs,deleteDoc } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
 import { onAuthStateChanged, updateProfile, getAuth } from "firebase/auth";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { useAuth } from "../hooks/useAuth";
 
 export const Profile = () => {
+    const [showConfirmButton, setShowConfirmButton] = useState(false);
+    const [isCheckedHidden, setIsCheckedHidden] = useState(true);
+    const [buttonText, setButtonText] = useState('Clear History');
     const { user } = useAuth();
     const { theme } = useTheme();
 
@@ -196,6 +199,49 @@ export const Profile = () => {
         // Misal, file di klik, ada modal yang nampilin detail file, let's see later
     };
 
+    const handleDelete = () => {
+        setIsCheckedHidden(!isCheckedHidden);
+        setButtonText(buttonText === 'Clear History' ? 'Cancel' : 'Clear History');
+        setShowConfirmButton(isCheckedHidden);
+    };
+
+    const handleConfirmDelete = async () => {
+        const selectedFiles = uploadHistory.filter((file, index) => {
+            const checkbox = document.querySelectorAll('input[type="checkbox"]')[index];
+            return checkbox.checked;
+        });
+    
+        try {
+            setLoading(true)
+            // Delete the selected files from Firestore
+            const user = auth.currentUser;
+            const userRef = doc(db, "Users", user.uid);
+            const historyRef = collection(userRef, "uploadHistory");
+            await Promise.all(selectedFiles.map((file) => {
+                return deleteDoc(doc(historyRef, file.id));
+            }));
+    
+            const storage = getStorage();
+            await Promise.all(selectedFiles.map((file) => {
+                return deleteObject(ref(storage, `essays/${user.uid}/${file.fileName}`));
+            }));
+    
+            // Update the upload history state
+            const newUploadHistory = uploadHistory.filter((file) => {
+                return !selectedFiles.includes(file);
+            });
+            setUploadHistory(newUploadHistory);
+    
+            // Hide the confirmation button and checkboxes
+            setIsCheckedHidden(true);
+            setShowConfirmButton(false);
+            setButtonText('Clear History');
+            setLoading(false)
+        } catch (error) {
+            console.error("Error deleting files:", error);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -297,8 +343,20 @@ export const Profile = () => {
                     >
                         Update
                     </Button>
-
-                    <h2 className="text-xl font-semibold mt-8 mb-4">Upload History</h2>
+                    <div className="flex flex-row justify-between">
+                        <h2 className="text-xl font-semibold mt-8 mb-4 ">
+                            Upload History
+                        
+                        
+                        </h2>
+                            <Button className="text-xl font-semibold  mt-8 mb-4 mr-10" 
+                                 onClick={() => handleDelete()}>
+                                     {buttonText}
+                                </Button>
+                     
+                        
+                    </div>
+                   
                     <ScrollArea className="h-[200px]">
                         {uploadHistory.length > 0 ? (
                             uploadHistory.map((item, index) => (
@@ -309,26 +367,40 @@ export const Profile = () => {
                                     <div className="flex items-center">
                                         <FileText className="mr-2 h-4 w-4" />
                                         <div>
-                                            <span className="font-medium">{item.fileName}</span>
+                                            <Button className="font-medium" variant="link"  onClick={() => handleViewDetails(item)}>{item.fileName}</Button>
                                             <p className="text-xs text-gray-400">
                                                 {item.uploadDate ? new Date(item.uploadDate.toDate()).toLocaleString() : 'Date not available'}
                                             </p>
                                         </div>
                                     </div>
-                                    <Button
-                                        variant="link"
-                                        className="text-blue-400 hover:text-blue-300"
-                                        onClick={() => handleViewDetails(item)}
-                                    >
-                                        View Details
-                                    </Button>
+                                   
+    
+                                    <input type="checkbox" className={isCheckedHidden ? 'hidden' : ''} />
+
+
                                 </div>
                             ))
-                        ) : (
+
+                            
+                        )
+                            
+                        
+                        : (
                             <p>No upload history available.</p>
                         )}
+                        
+
                     </ScrollArea>
+                    {showConfirmButton && (
+                                <Button 
+                                    className="text-xl font-semibold mt-8 mb-4 mr-10" 
+                                    onClick={handleConfirmDelete}
+                                >
+                                    Confirm Delete
+                                </Button>
+                            )}
                 </CardContent>
+                       
             </Card>
         </div>
     );
