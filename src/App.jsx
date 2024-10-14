@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { Review } from './components/Review';
+import { Generate } from './components/Generate';
 import { Sidebar } from './components/SideBar';
 import { Profile } from './components/Profile';
 import { ThemeProvider } from './components/theme-provider';
@@ -29,6 +30,7 @@ function App() {
                       <div className="p-4">
                         <Routes>
                           <Route path='/review' element={<Review/>}/>
+                          <Route path='/generate' element={<Generate/>}/>
                           <Route path='/profile' element={<Profile/>}/>
                           <Route index element={<Navigate to="/review" replace />} />
                         </Routes>

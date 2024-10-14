@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, NavLink } from "react-router-dom"
 import { useTheme } from "next-themes"
 import { Button } from "./ui/button"
 import { ScrollArea } from "./ui/scroll-area"
@@ -51,19 +51,24 @@ export function Sidebar({ isOpen, setIsOpen }) {
       <div className="flex flex-col justify-between flex-grow overflow-y-auto">
         <ScrollArea className="flex-grow w-full">
           <nav className="space-y-2 p-2">
-            <Link to="/profile" className="w-full block" onClick={() => setIsOpen(false)}>
+            <NavLink to="/profile" className={({ isActive }) => `w-full block ${isActive ? 'bg-gray-200 dark:bg-gray-700' : ''}`} onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start dark:hover:bg-gray-700">
                 <UserCircle className="mr-2 h-4 w-4" />
                 {isOpen && "Profile"}
-
               </Button>
-            </Link>
-            <Link to="/review" className="w-full block" onClick={() => setIsOpen(false)}>
+            </NavLink>
+            <NavLink to="/review" className={({ isActive }) => `w-full block ${isActive ? 'bg-gray-200 dark:bg-gray-700' : ''}`} onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start dark:hover:bg-gray-700">
                 <FileText className="mr-2 h-4 w-4" />
                 {isOpen && "Review"}
               </Button>
-            </Link>
+            </NavLink>
+            <NavLink to="/generate" className={({ isActive }) => `w-full block ${isActive ? 'bg-gray-200 dark:bg-gray-700' : ''}`} onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start dark:hover:bg-gray-700">
+                <FileText className="mr-2 h-4 w-4" />
+                {isOpen && "Generate"}
+              </Button>
+            </NavLink>
           </nav>
         </ScrollArea>
         <div className="p-4 space-y-2 w-full">
