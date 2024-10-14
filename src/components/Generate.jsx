@@ -35,7 +35,7 @@ export const Generate = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Submitting:", essayType, formData);
-    // Simulasi generate essay (ganti dengan panggilan API sebenarnya)
+    // Result Simulation
     setGeneratedEssay("This is a generated essay based on your inputs. Replace this with the actual AI-generated content.");
   };
 

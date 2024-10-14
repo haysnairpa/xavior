@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Toast, ToastAction } from "../components/ui/toast";
 import { FileText, Loader2, UserIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp , collection, query, orderBy, getDocs } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
 import { onAuthStateChanged, updateProfile, getAuth } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -31,6 +31,8 @@ export const Profile = () => {
         profession: "",
     });
 
+    const [uploadHistory, setUploadHistory] = useState([]);
+
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -42,6 +44,30 @@ export const Profile = () => {
             }
         });
         return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        const fetchUploadHistory = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    const userRef = doc(db, "Users", user.uid);
+                    const historyRef = collection(userRef, "uploadHistory");
+                    const q = query(historyRef, orderBy("uploadDate", "desc"));
+                    const querySnapshot = await getDocs(q);
+                    const history = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    console.log("Fetched history:", history); // Untuk debugging
+                    setUploadHistory(history);
+                } catch (error) {
+                    console.error("Error fetching upload history:", error);
+                }
+            }
+        };
+
+        fetchUploadHistory();
     }, []);
 
     const fetchuserData = async (uid) => {
@@ -161,6 +187,12 @@ export const Profile = () => {
         });
     };
 
+    const handleViewDetails = (item) => {
+        // Logic for file detail
+        console.log("View details for:", item);
+        // Misal, file di klik, ada modal yang nampilin detail file, let's see later
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -263,34 +295,35 @@ export const Profile = () => {
                         Update
                     </Button>
 
-                    <h2 className="text-xl font-semibold mt-8 mb-4">
-                        Upload History
-                    </h2>
+                    <h2 className="text-xl font-semibold mt-8 mb-4">Upload History</h2>
                     <ScrollArea className="h-[200px]">
-                        {[1, 2].map((item) => (
-                            <div
-                                key={item}
-                                className="flex items-center justify-between p-4 border border-gray-400 rounded-lg mb-2"
-                            >
-                                <div className="flex items-center">
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    <div>
-                                        <span className="font-medium">
-                                            First Essay
-                                        </span>
-                                        <p className="text-xs text-gray-400">
-                                            firstessay.docx
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="link"
-                                    className="text-blue-400 hover:text-blue-300"
+                        {uploadHistory.length > 0 ? (
+                            uploadHistory.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between p-4 border border-gray-400 rounded-lg mb-2"
                                 >
-                                    Click to see more
-                                </Button>
-                            </div>
-                        ))}
+                                    <div className="flex items-center">
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        <div>
+                                            <span className="font-medium">{item.fileName}</span>
+                                            <p className="text-xs text-gray-400">
+                                                {item.uploadDate ? new Date(item.uploadDate.toDate()).toLocaleString() : 'Date not available'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="link"
+                                        className="text-blue-400 hover:text-blue-300"
+                                        onClick={() => handleViewDetails(item)}
+                                    >
+                                        View Details
+                                    </Button>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No upload history available.</p>
+                        )}
                     </ScrollArea>
                 </CardContent>
             </Card>

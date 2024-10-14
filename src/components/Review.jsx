@@ -12,15 +12,16 @@ import {
 import { useTheme } from "next-themes";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, getAuth } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { db, auth } from "../config/firebase";
-import { useAuth } from "@/hooks/useAuth";
+import { db, storage, auth } from "../config/firebase";
+import { useAuth } from "../hooks/useAuth";
 
 export const Review = () => {
   const { toast } = useToast();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const auth = getAuth();
 
   const [reviewResults, setReviewResults] = useState(null);
   const [fileURL, setfileURL] = useState(null);
@@ -30,71 +31,124 @@ export const Review = () => {
   const uploadCardRef = useRef(null);
   const resultCardRef = useRef(null);
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024; // 5GB in bytes
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    const fileInput = e.target.querySelector('input[type="file"]');
-    const file = fileInput && fileInput.files && fileInput.files[0];
-    console.log(file);
-    if (file?.type.startsWith("application/")) {
-      try {
-        setLoading(true);
-        await uploadFile(file);
-        // Simulasi hasil review AI
-        setReviewResults({
-          grammarScore: 95,
-          structureScore: 90,
-          contentScore: 88,
-        });
-      } catch (error) {
-        console.error("Error upload file ", error);
+    console.log("Submit button clicked");
+    
+    if (!auth.currentUser) {
+      console.error("User not authenticated");
+      toast({
+        title: "Authentication Error",
+        description: "Please login to upload files",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Token refresh before uploading
+      await auth.currentUser.getIdToken(true);
+      console.log("User authenticated and token refreshed:", auth.currentUser.uid);
+      
+      console.log("User authenticated:", auth.currentUser.uid);
+      
+      setLoading(true);
+      const fileInput = e.target?.querySelector('input[type="file"]');
+      const file = fileInput?.files?.[0];
+      if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+          console.error("File too large");
+          toast({
+            title: "File Too Large",
+            description: "Maximum file size is 5GB",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        try {
+          if (!user) {
+            throw new Error("User not authenticated");
+          }
+          const downloadURL = await uploadFile(file);
+          if (!downloadURL) {
+            throw new Error("Failed to get download URL");
+          }
+          
+          // Result Simulation
+          const reviewResults = {
+            grammarScore: 95,
+            structureScore: 90,
+            contentScore: 88,
+          };
+          setReviewResults(reviewResults);
+
+          // Save file data to firestore
+          await addFileToHistory(file.name, downloadURL, reviewResults);
+
+          toast({
+            title: "File successfully submitted and reviewed",
+            description: "See the review result in the right",
+            variant: "success",
+          });
+        } catch (error) {
+          console.error("Error upload file ", error);
+          toast({
+            title: "Upload Failed",
+            description: error.message || "Error occured. Try again later",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      } else {
         toast({
-          title: "Gagal upload",
-          description: "Terjadi kesalahan. Silakan coba lagi.",
+          title: "No file selected",
+          description: "Please select a file to upload.",
           variant: "destructive",
         });
-      } finally {
         setLoading(false);
       }
-    } else {
+    } catch (error) {
+      console.error("Error refreshing token:", error);
       toast({
-        title: "Format file tidak didukung",
-        description: "Harap pilih file gambar (JPG, PNG, dll).",
+        title: "Authentication Error",
+        description: "Please try logging in again",
         variant: "destructive",
       });
     }
   };
 
   const uploadFile = async (file) => {
-    const storage = getStorage();
-    const auth = getAuth();
-    const user = auth.currentUser;
+    console.log("Starting uploadFile function");
+    if (!auth.currentUser) {
+      console.error("User not authenticated");
+      throw new Error("User not authenticated");
+    }
 
-    if (!user) throw new Error("No user logged in");
-
-    const storageRef = ref(storage, `fileUploaded/${user.uid}`);
-
-    // Upload file
-    await uploadBytes(storageRef, file);
-
-    // Get download URL
-    const downloadURL = await getDownloadURL(storageRef);
-
-    // Update Firestore
-    await setDoc(
-      doc(db, "Users", user.uid),
-      { fileURL: downloadURL },
-      { merge: true }
-    );
-
-    // Update local state
-    setfileURL(downloadURL);
-
-    toast({
-      title: "File uploaded successfully",
-      description: "Your file has been successfully uploaded",
-      variant: "success",
-    });
+    try {
+      console.log("User authenticated, proceeding with upload");
+      // Make sure path sesuai dengan storage rules. kalo ngga FATAL
+      const storageRef = ref(storage, `essays/${auth.currentUser.uid}/${file.name}`);
+      console.log("Storage reference created:", storageRef);
+      
+      console.log("Uploading file...");
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log("File uploaded successfully, snapshot:", snapshot);
+      
+      console.log("Getting download URL...");
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log("Download URL obtained:", downloadURL);
+      return downloadURL;
+    } catch (error) {
+      console.error("Detailed upload error:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      throw error;
+    }
   };
 
   const fetchuserData = async (uid) => {
@@ -108,6 +162,26 @@ export const Review = () => {
       console.log("Error fetching user data: " + error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addFileToHistory = async (fileName, fileURL, reviewResults) => {
+    try {
+      if (!fileURL) {
+        console.error("fileURL is undefined");
+        throw new Error("fileURL is undefined");
+      }
+      const userRef = doc(db, "Users", user.uid);
+      const historyRef = collection(userRef, "uploadHistory");
+      await addDoc(historyRef, {
+        fileName,
+        fileURL,
+        reviewResults,
+        uploadDate: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error adding file to history:", error);
+      throw error;
     }
   };
 
@@ -155,6 +229,7 @@ export const Review = () => {
               <Input
                 id="essay-upload"
                 type="file"
+                accept='application/*'
                 className="bg-white dark:bg-transparent text-gray-900 dark:text-white"
               />
               <Textarea
