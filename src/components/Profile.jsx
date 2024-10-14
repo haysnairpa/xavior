@@ -87,11 +87,38 @@ export const Profile = () => {
       } catch (error) {
 
         toast({
+<<<<<<< Updated upstream
           title: 'Error updating data',
           description: error.message,
           variant: 'destructive'
         })
       }
+=======
+            title: "Profile picture updated successfully",
+            description: "Your profile picture has been successfully updated",
+            variant: "success",
+        });
+    };
+
+    const handleViewDetails =async (item) => {
+        // Logic for file detail
+        const storage = getStorage();
+        const url = await getDownloadURL(ref(storage, `essays/${user.uid}/${item.fileName}`));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = item.fileName; // or a default file name, e.g., "essay.pdf"
+        link.target = '_blank';
+        link.click();
+        // Misal, file di klik, ada modal yang nampilin detail file, let's see later
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Loader2 className="h-10 w-10 animate-spin" />
+            </div>
+        );
+>>>>>>> Stashed changes
     }
     console.log('Data Updated:', personalInfo);
   };
