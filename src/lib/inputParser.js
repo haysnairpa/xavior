@@ -77,6 +77,6 @@ export const promptParser = (input, type) => {
       prompt = personalStatementPromptParser(input);  
       return prompt;
     default: 
-      return null;
+      return "Not Defined";
   }
 }
