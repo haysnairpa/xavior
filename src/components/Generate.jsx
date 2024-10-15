@@ -5,7 +5,8 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
-import { motivationalLetterPromptParser, personalStatementPromptParser, studyPlanPromptParser } from "@/lib/inputParser";
+import { promptParser } from "@/lib/inputParser";
+import { generateEssay } from "@/lib/GenerateEssay";
 
 export const Generate = () => {
   const [essayType, setEssayType] = useState(null);
@@ -36,31 +37,15 @@ export const Generate = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Submitting:", essayType, formData);
-    if (essayType === "Study Plan") {
-      const prompt = studyPlanPromptParser(formData);
-      try {
-        console.log(prompt);
-      } catch (error) {
-        console.error(error);
-      }
-    } else if (essayType === "Motivational Letter") {
-      const prompt = motivationalLetterPromptParser(formData);
-      try {
-        console.log(prompt);
-      } catch (error) {
-        console.error(error);
-      }
-
-    } else if (essayType === "Personal Statee=ment") {
-      const prompt = personalStatementPromptParser(formData);
-      try {
-        console.log(prompt);
-      } catch (error) {
-        console.error(error);
-      }
-
+    console.log("Essay Type:", essayType, typeof essayType);
+    try {
+      const prompt = promptParser(formData, essayType);
+      const result = await generateEssay(prompt)
+      setGeneratedEssay(result);
+  
+    } catch (error) {
+      console.error(error)
     }
-    setGeneratedEssay("This is a generated essay based on your inputs. Replace this with the actual AI-generated content.");
   };
 
   const renderForm = () => {

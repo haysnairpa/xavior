@@ -4,6 +4,7 @@ import {HarmBlockThreshold, HarmCategory} from '@google/generative-ai';
 
 const llm = new ChatGoogleGenerativeAI(
     {
+        apiKey: "AIzaSyDjzKR7xmpYedqjaOhpme8tnJ6sGaUqdNk",
         modelName: 'gemini-1.5-pro', 
         safetySettings: [
             {
