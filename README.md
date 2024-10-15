@@ -10,7 +10,7 @@ Member:
 
 Task Assignment:
 
-1. Aldi: Make an UI for essay result
+1. Aldi: Create a UI 
 2. Revo: Make a Upload History Feature.
 3. Adhit: Make the AI Code.
 4. Farrelio: Looking and fixing bugs.
