@@ -5,6 +5,8 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
+import { promptParser } from "@/lib/inputParser";
+import { generateEssay } from "@/lib/GenerateEssay";
 
 export const Generate = () => {
   const [essayType, setEssayType] = useState(null);
@@ -35,8 +37,15 @@ export const Generate = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Submitting:", essayType, formData);
-    // Result Simulation
-    setGeneratedEssay("This is a generated essay based on your inputs. Replace this with the actual AI-generated content.");
+    console.log("Essay Type:", essayType, typeof essayType);
+    try {
+      const prompt = promptParser(formData, essayType);
+      const result = await generateEssay(prompt)
+      setGeneratedEssay(result);
+  
+    } catch (error) {
+      console.error(error)
+    }
   };
 
   const renderForm = () => {
@@ -46,8 +55,8 @@ export const Generate = () => {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="studyProgram">Study Program</Label>
-                <Input id="studyProgram" name="studyProgram" onChange={handleInputChange} required />
+                <Label htmlFor="degree">Degree</Label>
+                <Input id="degree" name="degree" onChange={handleInputChange} required />
               </div>
               <div>
                 <Label htmlFor="institution">Institution</Label>
@@ -88,8 +97,8 @@ export const Generate = () => {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="studyProgram">Study Program</Label>
-                <Input id="studyProgram" name="studyProgram" onChange={handleInputChange} required />
+                <Label htmlFor="degree">Degree</Label>
+                <Input id="degree" name="degree" onChange={handleInputChange} required />
               </div>
               <div>
                 <Label htmlFor="institution">Institution</Label>
@@ -109,7 +118,7 @@ export const Generate = () => {
                       className="mb-2"
                     />
                     <Textarea
-                      placeholder={`Plan for motivation ${index + 1}`}
+                      placeholder={`Contribution plan related to motivation ${index + 1}`}
                       onChange={(e) => handleArrayInputChange(index, 'motivations', 'plan', e.target.value)}
                     />
                   </div>
@@ -128,8 +137,8 @@ export const Generate = () => {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="studyProgram">Study Program</Label>
-                <Input id="studyProgram" name="studyProgram" onChange={handleInputChange} required />
+                <Label htmlFor="degree">Degree</Label>
+                <Input id="degree" name="degree" onChange={handleInputChange} required />
               </div>
               <div>
                 <Label htmlFor="institution">Institution</Label>
