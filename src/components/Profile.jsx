@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Toast, ToastAction } from "../components/ui/toast";
-import { FileText, Loader2, UserIcon } from "lucide-react";
+import { FileText, Loader2, UserIcon, History, Trash2, Upload, Mail, Briefcase, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { doc, getDoc, setDoc, serverTimestamp , collection, query, orderBy, getDocs,deleteDoc } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
@@ -278,8 +278,9 @@ export const Profile = () => {
                     />
                     <Button
                         onClick={() => fileInputRef.current.click()}
-                        className="w-full hover:bg-[#444] text-white"
+                        className="w-full hover:bg-[#444] text-white flex items-center gap-2"
                     >
+                        <Upload className="h-4 w-4" />
                         Change Picture
                     </Button>
                     {loading && (
@@ -295,68 +296,76 @@ export const Profile = () => {
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                         <div>
-                            <label className="block text-sm mb-1">
+                            <label className="block text-sm mb-1 flex items-center gap-2">
+                                <User className="h-4 w-4" />
                                 Full name
                             </label>
                             <Input
                                 name="fullname"
                                 value={personalInfo.fullname}
                                 onChange={handleInputChange}
-                                className="dark:bg-transparent  dark:border-gray-600 "
+                                className="dark:bg-transparent dark:border-gray-600 w-full"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm mb-1">
+                            <label className="block text-sm mb-1 flex items-center gap-2">
+                                <User className="h-4 w-4" />
                                 Username
                             </label>
                             <Input
                                 name="username"
                                 value={personalInfo.username}
                                 onChange={handleInputChange}
-                                className="dark:bg-transparent  dark:border-gray-600 "
+                                className="dark:bg-transparent dark:border-gray-600 w-full"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm mb-1">Email</label>
+                            <label className="block text-sm mb-1 flex items-center gap-2">
+                                <Mail className="h-4 w-4" />
+                                Email
+                            </label>
                             <Input
                                 name="email"
                                 value={personalInfo.email}
                                 onChange={handleInputChange}
-                                className="dark:bg-transparent  dark:border-gray-600 "
+                                className="dark:bg-transparent dark:border-gray-600 w-full"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm mb-1">
+                            <label className="block text-sm mb-1 flex items-center gap-2">
+                                <Briefcase className="h-4 w-4" />
                                 Profession
                             </label>
                             <Input
                                 name="profession"
                                 value={personalInfo.profession}
                                 onChange={handleInputChange}
-                                className="dark:bg-transparent  dark:border-gray-600 "
+                                className="dark:bg-transparent dark:border-gray-600 w-full"
                             />
                         </div>
                     </div>
                     <Button
                         onClick={handleUpdate}
-                        className="hover:bg-[#444] w-full sm:w-auto text-white mb-4"
+                        className="hover:bg-[#444] w-full sm:w-auto text-white mb-4 flex items-center gap-2"
                     >
+                        <Upload className="h-4 w-4" />
                         Update
                     </Button>
-                    <div className="flex flex-row justify-between">
-                        <h2 className="text-xl font-semibold mt-8 mb-4 ">
+                    <div className="flex flex-row justify-between items-center">
+                        <h2 className="text-xl font-semibold mt-8 mb-4 flex items-center gap-2">
+                            <History className="h-5 w-5" />
                             Upload History
-                        
-                        
                         </h2>
-                            <Button className="text-xl font-semibold  mt-8 mb-4 mr-10" 
-                                 onClick={() => handleDelete()}>
-                                     {buttonText}
-                                </Button>
-                     
-                        
+                        <Button 
+                            variant="secondary"
+                            className="mt-8 mb-4 flex items-center gap-2" 
+                            onClick={() => handleDelete()}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            {buttonText}
+                        </Button>
                     </div>
-                   
+                    
                     <ScrollArea className="h-[200px]">
                         {uploadHistory.length > 0 ? (
                             uploadHistory.map((item, index) => (

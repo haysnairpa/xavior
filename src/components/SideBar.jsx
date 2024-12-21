@@ -7,7 +7,7 @@ import { Button } from "./ui/button"
 import { ScrollArea } from "./ui/scroll-area"
 import { useToast } from '@/hooks/use-toast'
 import { Toast, ToastAction } from './ui/toast'
-import { UserCircle, FileText, Moon, Sun, LogOut } from "lucide-react"
+import { UserCircle, FileText, Moon, Sun, LogOut, PenLine } from "lucide-react"
 import { useAuth } from '../hooks/useAuth'
 import { signOut } from 'firebase/auth'
 import { auth } from '../config/firebase'
@@ -65,7 +65,7 @@ export function Sidebar({ isOpen, setIsOpen }) {
             </NavLink>
             <NavLink to="/generate" className={({ isActive }) => `w-full block ${isActive ? 'bg-gray-200 dark:bg-gray-700' : ''}`} onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full justify-start dark:hover:bg-gray-700">
-                <FileText className="mr-2 h-4 w-4" />
+                <PenLine className="mr-2 h-4 w-4" />
                 {isOpen && "Generate"}
               </Button>
             </NavLink>
